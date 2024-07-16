@@ -1,5 +1,6 @@
-﻿@using System.Globalization
-@using WebProject.Models
+﻿@using System.Globalization;
+@using WebProject.Models;
+@using MathCalculation.Models;
 @inject WebProject.Controllers.CalculationController CalculationController
 @page "/"
 
@@ -89,15 +90,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                        @foreach (var calculation in calculations)
-                        {
-                            <tr>
-                                <td>@calculation.Numbers[0]</td>
-                                <td>@calculation.Operation</td>
-                                <td>@calculation.Numbers[1]</td>
-                                <td>@calculation.Result</td>
-                            </tr>
-                        }
+                            @foreach (var calculation in calculations)
+                            {
+                                <tr>
+                                    <td>@calculation.Number1</td>
+                                    <td>@(calculation.Operation == Operation.Plus ? "+" : calculation.Operation == Operation.Minus ? "-" : calculation.Operation == Operation.Multiply ? "x" : "/")</td>
+                                    <td>@calculation.Number2</td>
+                                    <td>@calculation.Result</td>
+                                </tr>
+                            }
                         </tbody>
 
                     </table>
@@ -105,172 +106,189 @@
             </div>
         </div>
     </div>
+</div>
 
+@code {
+    private string display = string.Empty;
+    private bool disabledNumber = false;
+    private bool disabledDot = false;
+    private bool disabledOperation = true;
+    private bool disabledResult = true;
+    private CalculationModel model = new CalculationModel();
 
-    @code {
-        private string display = string.Empty;
-        private bool disabledNumber = false;
-        private bool disabledDot = false;
-        private bool disabledOperation = true;
-        private bool disabledResult = true;
-        private double number1 = 0;
-        private double number2 = 0;
-        private double result = 0;
-        private string operation = string.Empty;
-        private List<Calculation> calculations = new List<Calculation>();
+    MathCalculation.Operation calculation = new MathCalculation.Operation();
 
-
-        protected override async Task OnInitializedAsync()
-        {
-            display = string.Empty;
-            calculations = await CalculationController.GetLastCalculation();
-        }
-
-        private readonly string[][] buttonRows = new[] //Naplneni matice napisy tlacitek kalkulacky
-        {
+    private List<Calculation> calculations = new List<Calculation>();
+    private readonly string[][] buttonRows = new[] //Naplneni matice napisy tlacitek kalkulacky
+    {
     new[] { "7", "8", "9", "+"  },
     new[] { "4", "5", "6", "-"  },
     new[] { "1", "2", "3", "x"  },
     new[] { "0", ".", "CE", "/" }
     };
 
-        private async Task OnButtonClick(string button)
+
+    protected override async Task OnInitializedAsync()
+    {
+        display = string.Empty;
+        calculations = await CalculationController.GetLastCalculation();
+
+    }
+
+
+    private async Task OnButtonClick(string button)
+    {
+
+
+        switch (button)
         {
-
-
-            switch (button)
-            {
-                case ".":
-                    if (result != 0)
-                    {
-                        display = string.Empty;
-                        operation = string.Empty;
-                        result = 0;
-                    }
-                    CheckDot(display);
-                    disabledOperation = !CheckOperation();
-                    disabledDot = true;
-                    disabledOperation = true;
-                    break;
-                case "-":
-                    AddOperation("-");
-                    operation = "-";
-
-                    break;
-                case "+":
-                    AddOperation("+");
-                    operation = "+";
-                    break;
-                case "x":
-                    AddOperation("x");
-                    operation = "x";
-                    break;
-                case "/":
-                    AddOperation("/");
-                    operation = "/";
-                    break;
-
-                case "CE":
+            case ".":
+                if (model == null)
+                {
+                    model = new CalculationModel();
                     display = string.Empty;
-                    disabledDot = false;
-                    disabledNumber = false;
-                    disabledOperation = true;
-                    operation = string.Empty;
-                    break;
+                    model.Operation = null;
+                    model.Result = 0;
 
-                case "=":
-                    result = await CalculationController.Result(GetNumbers(), operation); // Vypocet vysledku
+
+                }
+                CheckDot(display);
+                disabledOperation = !CheckOperation();
+                disabledDot = true;
+                disabledOperation = true;
+                break;
+            case "-":
+                AddOperation("-");
+                model.Operation = Operation.Minus;
+
+                break;
+            case "+":
+                AddOperation("+");
+                model.Operation = Operation.Plus;
+
+                break;
+            case "x":
+                AddOperation("x");
+                model.Operation = Operation.Multiply;
+
+                break;
+            case "/":
+                AddOperation("/");
+                model.Operation = Operation.Divide;
+
+                break;
+
+            case "CE":
+                if (model == null)
+                    model = new CalculationModel();
+                display = string.Empty;
+                disabledDot = false;
+                disabledNumber = false;
+                disabledOperation = true;
+                model.Operation = null;
+
+                break;
+
+            case "=":
+
+                var numbersArray = GetNumbers();
+
+                model = calculation.GetResult(new CalculationModel {Number1 = numbersArray[0], Number2 = numbersArray[1], Operation = model.Operation});
+                if (model != null)
+                {
+                   await CalculationController.AddToDbAsync(model);    
+
+                }
+                display = string.Empty;
+                disabledResult = true;
+                disabledDot = false;
+                if (model == null)
+                {
+                    display = "ERROR";
+                }else
+                    display = model.Result.ToString();
+                model = null;
+                break;
+
+            default:
+                if (model == null)
+                {
+                    model = new CalculationModel();
                     display = string.Empty;
-                    disabledResult = true;
-                    disabledDot = false;
-                    display = result.ToString();
+                    model.Operation = null;
+                    model.Result = 0;   
+                    
+                    
+                }
+                display += button;
+                disabledOperation = !CheckOperation();
+                disabledResult = !IsCalculationComplete(display);
+                break;
+        }
+    }
 
-                    break;
+    private void AddOperation(string _operation)
+    {
+        if (model.Operation != null) // Kontrola zda uz byla zvolena operace - pripadne prepsani na novou
+        {
+            display = display.Remove(display.Length - 3);
+        }
+        display += " " + _operation + " ";
+        disabledDot = false;
+    }
 
-                default:
-                    if (result != 0)
-                    {
-                        display = string.Empty;
-                        operation = string.Empty;
-                        result = 0;
-                    }
-                    display += button;
-                    disabledOperation = !CheckOperation();
-                    disabledResult = !IsCalculationComplete(display);
-                    break;
+    private List<double> GetNumbers()
+    {
+        string[] parts = display.Split(' ');
+        List<double> numbers = new List<double>();
+
+        foreach (var part in parts)
+        {
+            if (double.TryParse(part, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
+            {
+                numbers.Add(number);
             }
         }
 
-        private void AddOperation(string _operation)
+        return numbers;
+    }
+    
+    //Kontorla, zda je format retezce spravny pro vypocet
+    private bool IsCalculationComplete(string stringNumber)
+    {
+        string[] parts = display.Split(' ');
+
+        if (parts.Length == 3)
         {
-            if (operation != string.Empty) // Kontrola zda uz byla zvolena operace - pripadne prepsani na novou
-            {
-                display = display.Remove(display.Length - 3);
-            }
-            display += " " + _operation + " ";
-            disabledDot = false;
+            return true;
         }
 
-        private double[] GetNumbers()
+        return false;
+    }
+    //Kontrola zda cislo obsahuje desetinnou tecku
+    private void CheckDot(string stringNumber)
+    {
+        int lenght = stringNumber.Length;
+
+        if ((lenght > 0) && (char.IsDigit(stringNumber[lenght - 1])))
         {
-            string[] parts = display.Split(' ');
-
-            // Kontrola zda jsou zadana dve cisla a operace
-            if (parts.Length != 3)
-            {
-                throw new FormatException("Vstupní řetězec nemá očekávaný formát 'číslo operátor číslo'.");
-            }
-
-            double[] numbers = new double[2];
-            if (!double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[0]))
-            {
-                throw new FormatException($"Nepodařilo se převést první část '{parts[0]}' na číslo.");
-            }
-
-            if (!double.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[1]))
-            {
-                throw new FormatException($"Nepodařilo se převést třetí část '{parts[2]}' na číslo.");
-
-            }
-
-            return numbers;
+            display += ".";
         }
-        //Kontorla, zda je format retezce spravny pro vypocet
-        private bool IsCalculationComplete(string stringNumber)
+        else
         {
-            string[] parts = display.Split(' ');
-
-            if (parts.Length == 3)
-            {
-                return true;
-            }
-
+            display += "0.";
+        }
+    }
+    //Kontrola zda byla zadana operace
+    private bool CheckOperation()
+    {
+        string[] parts = display.Split(' ');
+        int count = parts.Length;
+        if (count <= 2)
+        {
+            return true;
+        }
+        else
             return false;
-        }
-        //Kontrola zda cislo obsahuje desetinnou tecku
-        private void CheckDot(string stringNumber)
-        {
-            int lenght = stringNumber.Length;
-
-            if ((lenght > 0) && (char.IsDigit(stringNumber[lenght - 1])))
-            {
-                display += ".";
-            }
-            else
-            {
-                display += "0.";
-            }
-        }
-        //Kontrola zda byla zadana operace
-        private bool CheckOperation()
-        {
-            string[] parts = display.Split(' ');
-            int count = parts.Length;
-            if (count <= 2)
-            {
-                return true;
-            }
-            else
-                return false;
-        }
+    }
     }

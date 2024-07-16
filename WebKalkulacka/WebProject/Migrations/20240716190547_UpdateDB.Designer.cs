@@ -11,7 +11,7 @@ using WebProject.Models;
 namespace WebProject.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20240716141448_UpdateDB")]
+    [Migration("20240716190547_UpdateDB")]
     partial class UpdateDB
     {
         /// <inheritdoc />
@@ -32,13 +32,14 @@ namespace WebProject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Numbers")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<double>("Number1")
+                        .HasColumnType("float");
 
-                    b.Property<string>("Operation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<double>("Number2")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Operation")
+                        .HasColumnType("int");
 
                     b.Property<double>("Result")
                         .HasColumnType("float");
