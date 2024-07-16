@@ -1,6 +1,7 @@
-﻿@page "/"
-@using System.Globalization
+﻿@using System.Globalization
+@using WebProject.Models
 @inject WebProject.Controllers.CalculationController CalculationController
+@page "/"
 
 <PageTitle>Kalkulačka</PageTitle>
 
@@ -74,165 +75,202 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Poslední výpočty</h3>
+                    <table class="table table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Číslo 1</th>
+                                <th scope="col">Operace</th>
+                                <th scope="col">Číslo 2</th>
+                                <th scope="col">Výsledek</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var calculation in calculations)
+                        {
+                            <tr>
+                                <td>@calculation.Numbers[0]</td>
+                                <td>@calculation.Operation</td>
+                                <td>@calculation.Numbers[1]</td>
+                                <td>@calculation.Result</td>
+                            </tr>
+                        }
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-@code {
-    private string display = string.Empty;
-    private bool disabledNumber = false;
-    private bool disabledDot = false;
-    private bool disabledOperation = true;
-    private bool disabledResult = true;
-    private double number1 = 0;
-    private double number2 = 0;
-    private double result = 0;
-    private string operation = string.Empty;
 
-    private readonly string[][] buttonRows = new[] //Naplneni matice napisy tlacitek kalkulacky
-    {
-        new[] { "7", "8", "9", "+"  },
-        new[] { "4", "5", "6", "-"  },
-        new[] { "1", "2", "3", "x"  },
-        new[] { "0", ".", "CE", "/" }
+    @code {
+        private string display = string.Empty;
+        private bool disabledNumber = false;
+        private bool disabledDot = false;
+        private bool disabledOperation = true;
+        private bool disabledResult = true;
+        private double number1 = 0;
+        private double number2 = 0;
+        private double result = 0;
+        private string operation = string.Empty;
+        private List<Calculation> calculations = new List<Calculation>();
+
+
+        protected override async Task OnInitializedAsync()
+        {
+            display = string.Empty;
+            calculations = await CalculationController.GetLastCalculation();
+        }
+
+        private readonly string[][] buttonRows = new[] //Naplneni matice napisy tlacitek kalkulacky
+        {
+    new[] { "7", "8", "9", "+"  },
+    new[] { "4", "5", "6", "-"  },
+    new[] { "1", "2", "3", "x"  },
+    new[] { "0", ".", "CE", "/" }
     };
 
-    private async Task OnButtonClick(string button)
-    {
-
-
-        switch (button)
+        private async Task OnButtonClick(string button)
         {
-            case ".":
-                if (result != 0)
-                {
+
+
+            switch (button)
+            {
+                case ".":
+                    if (result != 0)
+                    {
+                        display = string.Empty;
+                        operation = string.Empty;
+                        result = 0;
+                    }
+                    CheckDot(display);
+                    disabledOperation = !CheckOperation();
+                    disabledDot = true;
+                    disabledOperation = true;
+                    break;
+                case "-":
+                    AddOperation("-");
+                    operation = "-";
+
+                    break;
+                case "+":
+                    AddOperation("+");
+                    operation = "+";
+                    break;
+                case "x":
+                    AddOperation("x");
+                    operation = "x";
+                    break;
+                case "/":
+                    AddOperation("/");
+                    operation = "/";
+                    break;
+
+                case "CE":
                     display = string.Empty;
+                    disabledDot = false;
+                    disabledNumber = false;
+                    disabledOperation = true;
                     operation = string.Empty;
-                    result = 0;
-                }
-                CheckDot(display);
-                disabledOperation = !CheckOperation();
-                disabledDot = true;
-                disabledOperation = true;
-                break;
-            case "-":
-                AddOperation("-");
-                operation = "-";
+                    break;
 
-                break;
-            case "+":
-                AddOperation("+");
-                operation = "+";
-                break;
-            case "x":
-                AddOperation("x");
-                operation = "x";
-                break;
-            case "/":
-                AddOperation("/");
-                operation = "/";
-                break;
-
-            case "CE":
-                display = string.Empty;
-                disabledDot = false;
-                disabledNumber = false;
-                disabledOperation = true;
-                operation = string.Empty;
-                break;
-
-            case "=":
-                result = await CalculationController.Result(GetNumbers(), operation); // Vypocet vysledku
-                display = string.Empty;
-                disabledResult = true;
-                disabledDot = false;
-                display = result.ToString();
-
-                break;
-
-            default:
-                if (result != 0)
-                {
+                case "=":
+                    result = await CalculationController.Result(GetNumbers(), operation); // Vypocet vysledku
                     display = string.Empty;
-                    operation = string.Empty;
-                    result = 0;
-                }
-                display += button;
-                disabledOperation = !CheckOperation();
-                disabledResult = !IsCalculationComplete(display);
-                break;
-        }
-    }
+                    disabledResult = true;
+                    disabledDot = false;
+                    display = result.ToString();
 
-    private void AddOperation(string _operation)
-    {
-        if (operation != string.Empty) // Kontrola zda uz byla zvolena operace - pripadne prepsani na novou
+                    break;
+
+                default:
+                    if (result != 0)
+                    {
+                        display = string.Empty;
+                        operation = string.Empty;
+                        result = 0;
+                    }
+                    display += button;
+                    disabledOperation = !CheckOperation();
+                    disabledResult = !IsCalculationComplete(display);
+                    break;
+            }
+        }
+
+        private void AddOperation(string _operation)
         {
-            display = display.Remove(display.Length - 3);
+            if (operation != string.Empty) // Kontrola zda uz byla zvolena operace - pripadne prepsani na novou
+            {
+                display = display.Remove(display.Length - 3);
+            }
+            display += " " + _operation + " ";
+            disabledDot = false;
         }
-        display += " " + _operation + " ";
-        disabledDot = false;
-    }
 
-    private double[] GetNumbers()
-    {
-        string[] parts = display.Split(' ');
-
-        // Kontrola zda jsou zadana dve cisla a operace
-        if (parts.Length != 3)
+        private double[] GetNumbers()
         {
-            throw new FormatException("Vstupní řetězec nemá očekávaný formát 'číslo operátor číslo'.");
-        }
+            string[] parts = display.Split(' ');
 
-        double[] numbers = new double[2];
-        if (!double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[0]))
+            // Kontrola zda jsou zadana dve cisla a operace
+            if (parts.Length != 3)
+            {
+                throw new FormatException("Vstupní řetězec nemá očekávaný formát 'číslo operátor číslo'.");
+            }
+
+            double[] numbers = new double[2];
+            if (!double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[0]))
+            {
+                throw new FormatException($"Nepodařilo se převést první část '{parts[0]}' na číslo.");
+            }
+
+            if (!double.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[1]))
+            {
+                throw new FormatException($"Nepodařilo se převést třetí část '{parts[2]}' na číslo.");
+
+            }
+
+            return numbers;
+        }
+        //Kontorla, zda je format retezce spravny pro vypocet
+        private bool IsCalculationComplete(string stringNumber)
         {
-            throw new FormatException($"Nepodařilo se převést první část '{parts[0]}' na číslo.");
-        }
+            string[] parts = display.Split(' ');
 
-        if (!double.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[1]))
-        {
-            throw new FormatException($"Nepodařilo se převést třetí část '{parts[2]}' na číslo.");
-            
-        }
+            if (parts.Length == 3)
+            {
+                return true;
+            }
 
-        return numbers;
-    }
-
-    private bool IsCalculationComplete(string stringNumber)
-    {
-        string[] parts = display.Split(' ');
-
-        if (parts.Length == 3)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    private void CheckDot(string stringNumber)
-    {
-        int lenght = stringNumber.Length;
-
-        if ((lenght > 0) && (char.IsDigit(stringNumber[lenght - 1])))
-        {
-            display += ".";
-        }
-        else
-        {
-            display += "0.";
-        }
-    }
-
-    private bool CheckOperation()
-    {
-        string[] parts = display.Split(' ');
-        int count = parts.Length;
-        if (count <= 2)
-        {
-            return true;
-        }
-        else
             return false;
+        }
+        //Kontrola zda cislo obsahuje desetinnou tecku
+        private void CheckDot(string stringNumber)
+        {
+            int lenght = stringNumber.Length;
+
+            if ((lenght > 0) && (char.IsDigit(stringNumber[lenght - 1])))
+            {
+                display += ".";
+            }
+            else
+            {
+                display += "0.";
+            }
+        }
+        //Kontrola zda byla zadana operace
+        private bool CheckOperation()
+        {
+            string[] parts = display.Split(' ');
+            int count = parts.Length;
+            if (count <= 2)
+            {
+                return true;
+            }
+            else
+                return false;
+        }
     }
-}
