@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.EntityFrameworkCore;
+using WebProject.Models;
 
 
 namespace WebProject
@@ -8,12 +10,18 @@ namespace WebProject
     {
         public static void Main(string[] args)
         {
+
             var builder = WebApplication.CreateBuilder(args);
 
+            //Nacteni connection stringu
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
             // Add services to the container.
+            builder.Services.AddDbContext<Context>(options => options.UseSqlServer(connectionString)); //Pridani DB
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
-            //builder.Services.AddSingleton<WeatherForecastService>();
+            builder.Services.AddTransient<Context>(); //Dependency Injection pro Context
+            
 
             var app = builder.Build();
 
