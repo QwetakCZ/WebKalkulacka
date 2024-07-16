@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using WebProject.Models;
+using WebProject.Controllers;
 
 
 namespace WebProject
@@ -21,6 +22,7 @@ namespace WebProject
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
             builder.Services.AddTransient<Context>(); //Dependency Injection pro Context
+            builder.Services.AddTransient<CalculationController>(); //Dependency Injection pro CalculationController
             
 
             var app = builder.Build();
