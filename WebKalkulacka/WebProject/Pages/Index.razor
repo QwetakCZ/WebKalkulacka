@@ -10,7 +10,7 @@
 
 <style>
     .calc-button {
-        height: 75px; /* Změňte výšku dle potřeby */
+        height: 75px; 
     }
 </style>
 
@@ -94,7 +94,7 @@
                             {
                                 <tr>
                                     <td>@calculation.Number1</td>
-                                    <td>@(calculation.Operation == Operation.Plus ? "+" : calculation.Operation == Operation.Minus ? "-" : calculation.Operation == Operation.Multiply ? "x" : "/")</td>
+                                    <td>@operationDictionary[calculation.Operation]</td>
                                     <td>@calculation.Number2</td>
                                     <td>@calculation.Result</td>
                                 </tr>
@@ -115,6 +115,14 @@
     private bool disabledOperation = true;
     private bool disabledResult = true;
     private CalculationModel model = new CalculationModel();
+    Dictionary<Operation, string> operationDictionary = new Dictionary<Operation, string>()
+        {
+            { Operation.Plus, "+" },
+            { Operation.Minus, "-" },
+            { Operation.Multiply, "x" },
+            { Operation.Divide, "/" }
+        };
+
 
     MathCalculation.Operation calculation = new MathCalculation.Operation();
 
@@ -127,11 +135,15 @@
     new[] { "0", ".", "CE", "/" }
     };
 
+    public event Action OnDataChanged;
+
 
     protected override async Task OnInitializedAsync()
     {
         display = string.Empty;
-        calculations = await CalculationController.GetLastCalculation();
+        OnDataChanged += async () => await LoadLastResult();
+        await LoadLastResult();
+
 
     }
 
@@ -193,10 +205,11 @@
 
                 var numbersArray = GetNumbers();
 
-                model = calculation.GetResult(new CalculationModel {Number1 = numbersArray[0], Number2 = numbersArray[1], Operation = model.Operation});
+                model = calculation.GetResult(new CalculationModel { Number1 = numbersArray[0], Number2 = numbersArray[1], Operation = model.Operation });
                 if (model != null)
                 {
-                   await CalculationController.AddToDbAsync(model);    
+                    await CalculationController.AddToDbAsync(model);
+                    OnDataChanged?.Invoke();
 
                 }
                 display = string.Empty;
@@ -205,7 +218,8 @@
                 if (model == null)
                 {
                     display = "ERROR";
-                }else
+                }
+                else
                     display = model.Result.ToString();
                 model = null;
                 break;
@@ -216,9 +230,9 @@
                     model = new CalculationModel();
                     display = string.Empty;
                     model.Operation = null;
-                    model.Result = 0;   
-                    
-                    
+                    model.Result = 0;
+
+
                 }
                 display += button;
                 disabledOperation = !CheckOperation();
@@ -252,7 +266,7 @@
 
         return numbers;
     }
-    
+
     //Kontorla, zda je format retezce spravny pro vypocet
     private bool IsCalculationComplete(string stringNumber)
     {
@@ -291,4 +305,11 @@
         else
             return false;
     }
+
+    private async Task LoadLastResult()
+    {
+        calculations = await CalculationController.GetLastCalculation();
+        StateHasChanged();
+
     }
+}
