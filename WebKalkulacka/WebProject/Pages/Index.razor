@@ -96,7 +96,7 @@
         new[] { "0", ".", "CE", "/" }
     };
 
-    private async void OnButtonClick(string button)
+    private async Task OnButtonClick(string button)
     {
 
 
@@ -106,11 +106,13 @@
                 if (result != 0)
                 {
                     display = string.Empty;
+                    operation = string.Empty;
                     result = 0;
                 }
                 CheckDot(display);
                 disabledOperation = !CheckOperation();
                 disabledDot = true;
+                disabledOperation = true;
                 break;
             case "-":
                 AddOperation("-");
@@ -141,8 +143,10 @@
             case "=":
                 result = await CalculationController.Result(GetNumbers(), operation); // Vypocet vysledku
                 display = string.Empty;
+                disabledResult = true;
+                disabledDot = false;
                 display = result.ToString();
-                
+
                 break;
 
             default:
@@ -188,6 +192,7 @@
         if (!double.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out numbers[1]))
         {
             throw new FormatException($"Nepodařilo se převést třetí část '{parts[2]}' na číslo.");
+            
         }
 
         return numbers;
