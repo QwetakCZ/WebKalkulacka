@@ -5,11 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MathCalculation.Models;
+using MathCalculation.Services;
+
 
 namespace MathCalculation
 {
     public class Operation
     {
+       
         public CalculationModel GetResult(CalculationModel model)
         {
             switch (model.Operation)
@@ -25,9 +28,9 @@ namespace MathCalculation
                 default:
                     return null;
             }
-            
+
         }
-       
+
         private CalculationModel Plus(CalculationModel model)
         {
             try
@@ -60,7 +63,7 @@ namespace MathCalculation
         {
             try
             {
-               model.Result = model.Number1 * model.Number2;
+                model.Result = model.Number1 * model.Number2;
                 return model;
             }
             catch (Exception ex)
@@ -74,10 +77,9 @@ namespace MathCalculation
         {
             try
             {
-               if (model.Number2 == 0)
+                if (model.Number2 == 0)
                 {
                     throw new DivideByZeroException();
-
                 }
                 model.Result = model.Number1 / model.Number2;
                 return model;
@@ -89,9 +91,12 @@ namespace MathCalculation
             }
         }
 
-        public static void SendError(Exception exception)
+        public static async Task SendError(Exception exception)
         {
             Debug.WriteLine(exception.Message);
+            ErrorServices errorServices = new ErrorServices();
+            await errorServices.SaveError(exception.Message);
+
         }
     }
 

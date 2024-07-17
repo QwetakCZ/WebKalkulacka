@@ -11,7 +11,7 @@
 
 <style>
     .calc-button {
-        height: 75px; 
+        height: 75px;
     }
 </style>
 
@@ -75,6 +75,10 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input m-1" @bind="returnIntValues" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Vracet výsledek v celočíselných hodnotách</label>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
@@ -94,10 +98,10 @@
                             @foreach (var calculation in calculations)
                             {
                                 <tr>
-                                    <td>@calculation.Number1</td>
+                                    <td>@calculation.Number1.ToString("G10")</td> <!--Parametr G10 znamena, ze chci vypsat max. 10 znaku -->
                                     <td>@operationDictionary[calculation.Operation]</td>
-                                    <td>@calculation.Number2</td>
-                                    <td>@calculation.Result</td>
+                                    <td>@calculation.Number2.ToString("G10")</td>
+                                    <td>@calculation.Result.ToString("G10")</td>
                                 </tr>
                             }
                         </tbody>
@@ -108,8 +112,8 @@
         </div>
     </div>
 </div>
-
 @code {
+    private bool returnIntValues = false;
     private string display = string.Empty;
     private bool disabledNumber = false;
     private bool disabledDot = false;
@@ -136,19 +140,19 @@
     new[] { "0", ".", "CE", "/" }
     };
 
-   
+
 
     protected override async Task OnInitializedAsync()
     {
         display = string.Empty;
-        
+
         _event.OnReload += LoadLastResult;
 
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if(firstRender)
+        if (firstRender)
         {
             LoadLastResult(this, EventArgs.Empty);
         }
@@ -217,7 +221,7 @@
                 {
                     await CalculationController.AddToDbAsync(model);
                     _event.Reload();
-                    //OnDataChanged?.Invoke();
+                    
 
                 }
                 display = string.Empty;
@@ -228,7 +232,17 @@
                     display = "ERROR";
                 }
                 else
-                    display = model.Result.ToString();
+                {
+                    if(returnIntValues == true)
+                    {
+                        display = Math.Round(model.Result).ToString();
+                    }
+                    else
+                    {
+                        display = model.Result.ToString();
+                    }
+                    
+                }
                 model = null;
                 break;
 
@@ -259,14 +273,14 @@
         disabledDot = false;
     }
 
-    private List<double> GetNumbers()
+    private List<decimal> GetNumbers()
     {
         string[] parts = display.Split(' ');
-        List<double> numbers = new List<double>();
+        List<decimal> numbers = new List<decimal>();
 
         foreach (var part in parts)
         {
-            if (double.TryParse(part, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
+            if (decimal.TryParse(part, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal number))
             {
                 numbers.Add(number);
             }

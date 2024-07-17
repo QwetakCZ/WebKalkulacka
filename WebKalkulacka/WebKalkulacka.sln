@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebProject", "WebProject\WebProject.csproj", "{7EB88CEC-ED25-44AB-B223-9B763CF1545A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebProject", "WebProject\WebProject.csproj", "{7EB88CEC-ED25-44AB-B223-9B763CF1545A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathCalculation", "MathCalculation\MathCalculation.csproj", "{1C946646-BC28-4B83-9FE2-5F6CA176B5CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MathCalculation", "MathCalculation\MathCalculation.csproj", "{1C946646-BC28-4B83-9FE2-5F6CA176B5CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationTest", "OperationTest\OperationTest.csproj", "{BBC9A182-DE1B-4DFC-8E9A-0D41F82873A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{1C946646-BC28-4B83-9FE2-5F6CA176B5CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C946646-BC28-4B83-9FE2-5F6CA176B5CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C946646-BC28-4B83-9FE2-5F6CA176B5CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBC9A182-DE1B-4DFC-8E9A-0D41F82873A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBC9A182-DE1B-4DFC-8E9A-0D41F82873A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBC9A182-DE1B-4DFC-8E9A-0D41F82873A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBC9A182-DE1B-4DFC-8E9A-0D41F82873A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

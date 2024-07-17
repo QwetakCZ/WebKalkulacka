@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using WebProject.Models;
 using WebProject.Controllers;
 using WebProject.Services;
+using MathCalculation.Services;
 
 
 namespace WebProject
@@ -26,6 +27,7 @@ namespace WebProject
             builder.Services.AddTransient<CalculationController>(); //Dependency Injection pro CalculationController
 
             builder.Services.AddScoped<EventServices>();
+            builder.Services.AddScoped<ErrorServices>();
             
 
             var app = builder.Build();
