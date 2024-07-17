@@ -363,7 +363,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# appsettings.json - každý má svůj vlastní
 
-appsettings.json
-/LuRa_Vykup/Properties/launchSettings.json
