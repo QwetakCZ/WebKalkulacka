@@ -2,6 +2,7 @@
 @using WebProject.Models;
 @using MathCalculation.Models;
 @inject WebProject.Controllers.CalculationController CalculationController
+@inject WebProject.Services.EventServices _event
 @page "/"
 
 <PageTitle>Kalkulačka</PageTitle>
@@ -135,14 +136,17 @@
     new[] { "0", ".", "CE", "/" }
     };
 
-    public event Action OnDataChanged;
+    //public event Action OnDataChanged;
 
 
     protected override async Task OnInitializedAsync()
     {
         display = string.Empty;
-        OnDataChanged += async () => await LoadLastResult();
-        await LoadLastResult();
+        //OnDataChanged += async () => await LoadLastResult();
+        
+        _event.OnReload += LoadLastResult;
+
+        LoadLastResult(this, EventArgs.Empty);
 
 
     }
@@ -209,7 +213,8 @@
                 if (model != null)
                 {
                     await CalculationController.AddToDbAsync(model);
-                    OnDataChanged?.Invoke();
+                    _event.Reload();
+                    //OnDataChanged?.Invoke();
 
                 }
                 display = string.Empty;
@@ -306,7 +311,7 @@
             return false;
     }
 
-    private async Task LoadLastResult()
+    private async void LoadLastResult(object? sender, EventArgs e)
     {
         calculations = await CalculationController.GetLastCalculation();
         StateHasChanged();
