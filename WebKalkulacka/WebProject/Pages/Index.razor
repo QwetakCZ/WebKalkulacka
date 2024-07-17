@@ -127,7 +127,7 @@
 
     MathCalculation.Operation calculation = new MathCalculation.Operation();
 
-    private List<Calculation> calculations = new List<Calculation>();
+    private static List<Calculation> calculations = new List<Calculation>();
     private readonly string[][] buttonRows = new[] //Naplneni matice napisy tlacitek kalkulacky
     {
     new[] { "7", "8", "9", "+"  },
@@ -136,19 +136,22 @@
     new[] { "0", ".", "CE", "/" }
     };
 
-    //public event Action OnDataChanged;
-
+   
 
     protected override async Task OnInitializedAsync()
     {
         display = string.Empty;
-        //OnDataChanged += async () => await LoadLastResult();
         
         _event.OnReload += LoadLastResult;
 
-        LoadLastResult(this, EventArgs.Empty);
+    }
 
-
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if(firstRender)
+        {
+            LoadLastResult(this, EventArgs.Empty);
+        }
     }
 
 
